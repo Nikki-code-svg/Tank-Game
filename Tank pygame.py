@@ -30,7 +30,6 @@ class Laser(pygame.sprite.Sprite):
 class Tank(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-         resized_tank
         # put all images here for different movements/ put self on everything in the init
         #Define our image
         original_image = pygame.image.load('Graphics/green.png').convert_alpha()
@@ -38,41 +37,18 @@ class Tank(pygame.sprite.Sprite):
         # Get rect
         self.rect = self.image.get_rect()
         #Position the image
-        self.rect.topleft = (x,y)
+        self.rect.bleft = (x,y)
         # self.gravity = 0
-
-
-    def move(self):
-       keys = pygame.key.get_pressed()
-       if keys[pygame.K_RIGHT]:
-           self.rect.x += 10
-        
-       if keys[pygame.K_LEFT]:
-           self.rect.x -= 10
-
-    def collision(self):
-        # collide_rect(left, right)
-        pass
-       
-#tank instance
-tank = Tank(100, 500)
-tank_group = pygame.sprite.Group()
-tank_group.add(tank)
-
-# laser = Laser((100, 100))
-# laser2 = Laser((100, 200))  
-
-lasers_group = pygame.sprite.Group()
-# Create a group that will hold all the laser beams that the spaceship will fire
-# lasers_group.add(laser, laser2)
-
-        
         self.rect = self.image.get_rect(topleft=(x, y))
         self.lasers_group = pygame.sprite.Group()
         self.screen_height = pygame.display.get_surface().get_height()
         self.laser_ready = True
         self.laser_time = 0
         self.laser_delay = 300
+
+    def collision(self):
+        # collide_rect(left, right)
+        pass
 
     def move(self):
         keys = pygame.key.get_pressed()
@@ -99,6 +75,18 @@ lasers_group = pygame.sprite.Group()
         self.move()
         self.lasers_group.update()
         self.recharge_laser()
+       
+#tank instance
+tank = Tank(100, 500)
+tank_group = pygame.sprite.Group()
+tank_group.add(tank)
+
+# laser = Laser((100, 100))
+# laser2 = Laser((100, 200))  
+
+lasers_group = pygame.sprite.Group()
+# Create a group that will hold all the laser beams that the spaceship will fire
+# lasers_group.add(laser, laser2)
 
 # Initialize tank
 tank = Tank(100, 600)
@@ -112,20 +100,21 @@ while True:
             pygame.quit()
             exit()
 
-    resized_tank
     tank.rect.clamp_ip(screen_rect) # tank can't leave screen
     tank.move()
      
 
-=======
-    # Update and draw the scene
-
     screen.blit(sky_surface, (0, 0))
     screen.blit(ground_surface, (0, 600))
 
+    lasers_group.draw(screen)  # Draw all lasers in the group
+    lasers_group.update()  # Update all lasers in the group (if any update logic is added later)
+   
+
+
     tank_group.update()
     tank_group.draw(screen)
-    tank.lasers_group.draw(screen)
+
 
     pygame.display.update()
     clock.tick(60)
