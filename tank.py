@@ -1,30 +1,35 @@
 import pygame
-import random from Random
+
 
 class Tank(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         # put all images here for different movements/ put self on everything in the init
         #Define our image
-        self.image = pygame.image.load('Graphics/IMG_7003-pixelicious.png').convert_alpha()
+        self.image = pygame.image.load('Graphics/pixil-frame-0.png').convert_alpha()
         # Get rect
         self.rect = self.image.get_rect()
         #Position the image
         self.rect.topleft = (x,y)
-        self.gravity = 0
+        # self.gravity = 0
 
 
     def move(self):
        keys = pygame.key.get_pressed()
-       if keys[pygame.K_SPACE] and self.rect.bottom >= 300:
-           self.gravity = -20
+       if keys[pygame.K_RIGHT] and self.rect.bottom >= 600:
+           self.rect.x = 10
+       else: 
+           keys[pygame.K_LEFT] and self.rect.bottom >= 600;
+           self.rect.x = -10
+        
+           
     
-    def apply_gravity(self):
-        self.gravity += 1
-        # so our player does not fall outside of the screen
-        self.rect.y = self.gravity
-        if self.rect.bottom >= 300:
-            self.rect.bottom = 300
+    # def apply_gravity(self):
+    #     self.gravity += 1
+    #     # so our player does not fall outside of the screen
+    #     self.rect.y = self.gravity
+    #     if self.rect.bottom >= 600:
+    #         self.rect.bottom = 600
 
     #if we have animation with a different image
     # def animation_state(self):
@@ -38,7 +43,7 @@ class Tank(pygame.sprite.Sprite):
     
     def update(self):
         self.move()
-        self.apply_gravity()
+        # self.apply_gravity()
         self.check_collision()
         # self.animation_state()
 
@@ -62,14 +67,14 @@ class Obstacle(pygame.sprite.Sprite):
 
         self.animation_index = 0
 
-        self.image = self.frames[self.animation_index]
-        self.rect = self.image.get_rect(midbottom = (random.randint(900, 1100), y_pos))
+        # self.image = self.frames[self.animation_index]
+        # self.rect = self.image.get_rect(midbottom = (random.randint(900, 1100), y_pos))
 
 
 #create tank group
 tank_group = pygame.sprite.Group()
 #create and position tank
-tank = Tank(0, 300)
+tank = Tank(0, 600)
 
 
 # to call the function need the update function
