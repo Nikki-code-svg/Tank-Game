@@ -109,7 +109,7 @@ while True:
             pygame.quit()
             exit()
 
-    tank.rect.clamp_ip(screen_rect)  # tank can't leave screen
+    tank.rect.clamp_ip(screen_rect) 
 
     screen.blit(sky_surface, (0, 0))
     screen.blit(ground_surface, (0, 600))
