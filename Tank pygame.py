@@ -2,12 +2,22 @@ import pygame
 from sys import exit
 import random
 from pygame import mixer
+from lib.high_score_manager import Highscore
 
 pygame.init()
 screen = pygame.display.set_mode((1000, 800))
 screen_rect = screen.get_rect()  # part of tank can't leave screen
 pygame.display.set_caption('Tankzzzz')
 clock = pygame.time.Clock()
+
+##Font##
+title_font = pygame.font.Font("font/tank.ttf", 40) #get font
+title_surface = title_font.render("Tankzzz", False, "Purple")
+title_rect = title_surface.get_rect(center = (500, 400))
+
+high_score_surface = title_font.render("High Scores", False, "Purple")
+high_score_rect = high_score_surface.get_rect(center = (500, 50))
+
 
 # Load surfaces
 ground_surface = pygame.image.load('Graphics/ground1.png').convert()
@@ -18,6 +28,20 @@ alien_images = [
     'Graphics/Ship5/Ship5.png',
     'Graphics/Ship3/Ship3.png'
 ]
+
+####Score Board####
+def display_high_score(score_font, user, score, disp):
+    score_surface = score_font.render(f"{user}.......{score}", False, "White")
+    score_rect = score_surface.get_rect(center = (500, disp))
+    screen.blit(score_surface, score_rect)
+
+
+
+####states/screens
+#Start page
+high_scores = False
+game_active = False
+#game_over/enter initials
 
 class Aliens(pygame.sprite.Sprite):
     def __init__(self, x, y, angle=0):
@@ -108,19 +132,53 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                if not game_active and not high_scores:
+                        high_scores = True
+                elif high_scores and not game_active:
+                        high_scores = False
+                        game_active = True
 
-    tank.rect.clamp_ip(screen_rect) 
 
-    screen.blit(sky_surface, (0, 0))
-    screen.blit(ground_surface, (0, 600))
+    if game_active:
+        tank.rect.clamp_ip(screen_rect) 
 
-    alien_group.update()
-    alien_group.draw(screen)
+        screen.blit(sky_surface, (0, 0))
+        screen.blit(ground_surface, (0, 600))
 
-    tank_group.update()
-    tank_group.draw(screen)
+        alien_group.update()
+        alien_group.draw(screen)
+
+        tank_group.update()
+        tank_group.draw(screen)
+        
+        tank.lasers_group.draw(screen)
     
-    tank.lasers_group.draw(screen)
+    elif high_scores:
+        screen.fill("Grey")
+        screen.blit(high_score_surface, high_score_rect)
+
+        display = 200
+        for i in range(0,5):
+            display_high_score(title_font, Highscore.get_high_scores()[i][0], Highscore.get_high_scores()[i][1], display)
+            display+=100
+    
+    elif not game_active and not high_scores:
+        screen.fill("Grey")
+        screen.blit(title_surface, title_rect)
 
     pygame.display.update()
     clock.tick(60)
+
+
+####Scoring/collision Logic:
+# #alien
+# alien_rect.y += speed ##speed at which moving down
+# if bad_guy_rect collide with bullet 
+#     bad_guy_rect.bottom = -300 #reset to top
+#     bad_guy_rect.bottom = random.randint(x,y)
+#     ##Set a floor and ceiling for my speed, 5 and 12
+    
+#     speed =random.randrange(5,12)
+#     score +=1
