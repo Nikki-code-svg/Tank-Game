@@ -20,6 +20,29 @@ alien_images = [
     'Graphics/Ship3/Ship3.png'
 ]
 
+
+
+class HealthBar:
+    def __init__(self, x, y, width, height):
+        self.rect = pygame.Rect(x, y, width, height)#position and size of health bar
+        self.max_health = 100
+        self.current_health = self.max_health # current is max when you first start game
+
+    def draw(self, surface):
+        #Draw the background
+        pygame.draw.rect(surface, (0, 0, 0), self.rect)
+        health_bar_width = int(self.rect.width * (self.current_health / self.max_health))
+        #draw the filled portion of the health bar
+        pygame.draw.rect(surface, (255, 0, 0), (self.rect.x, self.rect.y, health_bar_width, self.rect.height))
+
+    def decrease_health(self, amount):
+        self.current_health -= amount
+        if self.current_health < 0:
+            self.current_health = 0 #does not go below zero
+    
+    
+        
+
 class Aliens(pygame.sprite.Sprite):
     def __init__(self, x, y, angle=0):
         super().__init__()
@@ -45,7 +68,7 @@ class Aliens(pygame.sprite.Sprite):
 alien_group = pygame.sprite.Group()
 
 rotation_angle = 270
-for i in range(5):
+for i in range(10):
     alien = Aliens(i*150, -50, rotation_angle)
     alien_group.add(alien)
 
@@ -72,25 +95,15 @@ class Laser(pygame.sprite.Sprite):
 class Tank(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        # put all images here for different movements/ put self on everything in the init
-        #Define our image
         original_image = pygame.image.load('Graphics/green.png').convert_alpha()
         self.image = pygame.transform.scale(original_image, (300,196))
-        # Get rect
-        self.rect = self.image.get_rect()
-        #Position the image
-        self.rect.bleft = (x,y)
-        # self.gravity = 0
         self.rect = self.image.get_rect(topleft=(x, y))
         self.lasers_group = pygame.sprite.Group()
         self.screen_height = pygame.display.get_surface().get_height()
         self.laser_ready = True
         self.laser_time = 0
         self.laser_delay = 300
-
-    def collision(self):
-        # collide_rect(left, right)
-        pass
+        self.health = 100
 
     def move(self):
         keys = pygame.key.get_pressed()
@@ -117,11 +130,16 @@ class Tank(pygame.sprite.Sprite):
         self.move()
         self.lasers_group.update()
         self.recharge_laser()
+
+    def decrease_health(self, amount):
+        self.health -= amount
+        if self.health < 0:
+            self.health = 0
        
 #tank instance
-tank = Tank(100, 500)
-tank_group = pygame.sprite.Group()
-tank_group.add(tank)
+tank = Tank(100, 450)
+tank_group = pygame.sprite.GroupSingle(tank)
+# tank_group.add(tank)
 
 # laser = Laser((100, 100))
 # laser2 = Laser((100, 200))  
@@ -134,7 +152,7 @@ lasers_group = pygame.sprite.Group()
 tank = Tank(100, 600)
 tank_group = pygame.sprite.GroupSingle(tank)
 
-
+health_bar = HealthBar(10, 10, 200, 20)
 # Main game loop
 while True:
     for event in pygame.event.get():
@@ -142,24 +160,44 @@ while True:
             pygame.quit()
             exit()
 
-    tank.rect.clamp_ip(screen_rect) # tank can't leave screen
-    tank.move()
-     
+   #when an alien hits into the tank it loses 10 point of health and will kill the an alien
+    for alien in alien_group:
+        if pygame.sprite.spritecollide(alien, tank_group, False):#used to check for collisions. function in pygame
+            tank.decrease_health(10)
+            alien.kill()
+            
+    for laser in tank.lasers_group:
+        collided_aliens = pygame.sprite.spritecollide(laser, alien_group, True)
+        if collided_aliens:
+            laser.kill()
 
+    if tank.health <= 0:
+        screen.fill((0, 0, 0))
+        font = pygame.font.SysFont(None, 55)
+        game_over_text = font.render('GAME OVER', True, (255, 0, 0))
+        text_rect = game_over_text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+        screen.blit(game_over_text, text_rect)
+        pygame.display.update()
+        pygame.time.wait(2000)  # Wait for 2 seconds
+        pygame.quit()
+        exit()
+
+    # Update game objects
+    tank.rect.clamp_ip(screen_rect)
+    tank.update()
+    alien_group.update()
+    tank.lasers_group.update()
+
+    # Draw everything
     screen.blit(sky_surface, (0, 0))
     screen.blit(ground_surface, (0, 600))
-
-    alien_group.update()
+    tank_group.draw(screen)
+    tank.lasers_group.draw(screen)
     alien_group.draw(screen)
 
-    lasers_group.draw(screen)  # Draw all lasers in the group
-    lasers_group.update()  # Update all lasers in the group (if any update logic is added later)
-   
-
-
-    tank_group.update()
-    tank_group.draw(screen)
-
+    # Draw the health bar
+    health_bar.current_health = tank.health
+    health_bar.draw(screen)
 
     pygame.display.update()
     clock.tick(60)
