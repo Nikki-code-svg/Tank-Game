@@ -97,8 +97,10 @@ def spawn_aliens(count=10):
 spawn_aliens()
 
 mixer.init()
+laser_sound = mixer.Sound('sounds/mixkit-laser-gun-shot-3110.wav')
 background_music = mixer.music.load('sounds/mixkit-game-level-music-689.wav')
-mixer.music.play()
+explosion_sound = mixer.Sound('sounds/mixkit-arcade-game-explosion-2759.wav')
+mixer.music.play(-1)
 
 class Laser(pygame.sprite.Sprite):
     def __init__(self, pos, speed, screen_height, offset_x=-24, offset_y=-95):
@@ -150,6 +152,7 @@ class Tank(pygame.sprite.Sprite):
         laser = Laser(self.rect.center, 5, self.screen_height)
         self.lasers_group.add(laser)
         self.laser_time = pygame.time.get_ticks()
+        laser_sound.play()
 
     def recharge_laser(self):
         if not self.laser_ready:
@@ -207,6 +210,7 @@ while True:
         # Check for collisions between lasers and aliens
         for laser in tank.lasers_group:
             if pygame.sprite.spritecollide(laser, alien_group, True):  # True to remove aliens
+                explosion_sound.play()
                 laser.kill()  # Remove laser on collision
                 score +=1
                 # print(score)
