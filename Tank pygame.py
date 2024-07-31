@@ -76,11 +76,11 @@ class Aliens(pygame.sprite.Sprite):
 
 alien_group = pygame.sprite.Group()
 
-def spawn_aliens(count=5):
+def spawn_aliens(count=10):
     for i in range(count):
         x = random.randint(0, screen.get_width() - 100)
-        y = random.randint(-100, -50)
-        angle = 0
+        y = random.randint(-150, -50)
+        angle = 90
         alien = Aliens(x, y, angle)
         alien_group.add(alien)
 
@@ -179,12 +179,12 @@ while True:
         screen.blit(sky_surface, (0, 0))
         screen.blit(ground_surface, (0, 600))
 
+        # Update and draw aliens
         alien_group.update()
         alien_group.draw(screen)
 
         tank_group.update()
         tank_group.draw(screen)
-        
         tank.lasers_group.draw(screen)
 
         # Check for collisions between aliens and tank
@@ -192,18 +192,23 @@ while True:
             if pygame.sprite.spritecollide(alien, tank_group, False):
                 tank.decrease_health(10)
                 alien.kill()
-            
-            # Check for game over condition
-            if tank.health_bar.current_health <= 0:
-                screen.fill((0, 0, 0))
-                font = pygame.font.SysFont(None, 55)
-                game_over_text = font.render('GAME OVER', True, (255, 0, 0))
-                text_rect = game_over_text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
-                screen.blit(game_over_text, text_rect)
-                pygame.display.update()
-                pygame.time.wait(2000)  # Wait for 2 seconds
-                pygame.quit()
-                exit()
+
+        # Check for collisions between lasers and aliens
+        for laser in tank.lasers_group:
+            if pygame.sprite.spritecollide(laser, alien_group, True):  # True to remove aliens
+                laser.kill()  # Remove laser on collision
+
+        # Check for game over condition
+        if tank.health_bar.current_health <= 0:
+            screen.fill((0, 0, 0))
+            font = pygame.font.SysFont(None, 55)
+            game_over_text = font.render('GAME OVER', True, (255, 0, 0))
+            text_rect = game_over_text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+            screen.blit(game_over_text, text_rect)
+            pygame.display.update()
+            pygame.time.wait(2000)  # Wait for 2 seconds
+            pygame.quit()
+            exit()
     
     elif high_scores:
         screen.fill("Grey")
@@ -218,6 +223,10 @@ while True:
     elif not game_active and not high_scores:
         screen.fill("Grey")
         screen.blit(title_surface, title_rect)
+
+    # Respawn aliens if necessary
+    if len(alien_group) == 0:
+        spawn_aliens()
 
     pygame.display.update()
     clock.tick(60)
