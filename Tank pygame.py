@@ -33,12 +33,22 @@ def display_high_score(score_font, user, score, disp):
     score_surface = score_font.render(f"{user}.......{score}", False, "White")
     score_rect = score_surface.get_rect(center=(500, disp))
     screen.blit(score_surface, score_rect)
+######################
+
+####Live Score#######
+def display_score(score_font, score):
+    score_surface = score_font.render(f"Score: {score}", False, "White")
+    score_rect = score_surface.get_rect(center = (500, 25))
+    screen.blit(score_surface, score_rect)
 
 #### States/screens ####
 # Start page
 high_scores = False
 game_active = False
 # game_over/enter initials
+
+##INIT SCORE
+score = 0
 
 class HealthBar:
     def __init__(self, x, y, width, height):
@@ -178,6 +188,7 @@ while True:
         tank.update()
         screen.blit(sky_surface, (0, 0))
         screen.blit(ground_surface, (0, 600))
+        display_score(title_font, score)
 
         # Update and draw aliens
         alien_group.update()
@@ -197,6 +208,12 @@ while True:
         for laser in tank.lasers_group:
             if pygame.sprite.spritecollide(laser, alien_group, True):  # True to remove aliens
                 laser.kill()  # Remove laser on collision
+                score +=1
+                # print(score)
+
+
+
+
 
         # Check for game over condition
         if tank.health_bar.current_health <= 0:
