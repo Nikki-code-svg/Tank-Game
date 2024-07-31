@@ -95,6 +95,7 @@ class Tank(pygame.sprite.Sprite):
         self.laser_ready = True
         self.laser_time = 0
         self.laser_delay = 300
+      
 
     def move(self):
         keys = pygame.key.get_pressed()
@@ -102,6 +103,10 @@ class Tank(pygame.sprite.Sprite):
             self.rect.x += 10
         if keys[pygame.K_LEFT]:
             self.rect.x -= 10
+        if self.rect.left > screen.get_width():
+            self.rect.right = 0
+        elif self.rect.right < 0:
+            self.rect.left = screen.get_width()
         if keys[pygame.K_SPACE] and self.laser_ready:
             self.shoot_laser()
 
@@ -142,8 +147,7 @@ while True:
 
 
     if game_active:
-        tank.rect.clamp_ip(screen_rect) 
-
+        tank.update()
         screen.blit(sky_surface, (0, 0))
         screen.blit(ground_surface, (0, 600))
 
