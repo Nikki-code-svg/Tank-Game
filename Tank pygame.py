@@ -1,4 +1,5 @@
 import pygame
+import pygame_textinput
 from sys import exit
 import random
 from pygame import mixer
@@ -17,6 +18,14 @@ title_rect = title_surface.get_rect(center=(500, 400))
 
 high_score_surface = title_font.render("High Scores", False, "Purple")
 high_score_rect = high_score_surface.get_rect(center=(500, 50))
+
+##enter name stuff
+
+manager = pygame_textinput.TextInputManager(validator = lambda input: len(input) <= 5)
+textinput_custom = pygame_textinput.TextInputVisualizer(manager=manager, font_object=title_font, font_color = "White")
+
+textinput_custom_surface = textinput_custom.surface
+textinput_custom_rect = textinput_custom_surface.get_rect(midbottom=(400,200))
 
 # Load surfaces
 ground_surface = pygame.image.load('Graphics/ground1.png').convert()
@@ -45,9 +54,10 @@ def display_score(score_font, score):
 # Start page
 high_scores = False
 game_active = False
+game_over = False
 # game_over/enter initials
 
-##INIT SCORE
+# ##INIT SCORE
 score = 0
 
 class HealthBar:
@@ -175,7 +185,8 @@ tank_group = pygame.sprite.GroupSingle(tank)
 
 # Main game loop
 while True:
-    for event in pygame.event.get():
+    events = pygame.event.get()
+    for event in events:
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
@@ -186,6 +197,38 @@ while True:
                 elif high_scores and not game_active:
                     high_scores = False
                     game_active = True
+
+            if event.key == pygame.K_RETURN:
+                
+                if game_over:
+                    
+                    if len(textinput_custom.value) > 0:
+
+                        user_name = textinput_custom.value
+                        user = Highscore(user_name, score)
+                        user.add_score()
+
+
+                        #Reset
+                        game_over = False
+                        game_active = False
+                        high_scores = True
+                        score = 0
+                        textinput_custom.value = ""
+                        ##Need to reset tank health and aliens
+                        tank.health_bar.current_health = 100
+            if event.key == pygame.K_TAB:
+                game_active = False
+                game_over = False
+                high_scores = False
+                tank.health_bar.current_health = 100
+                score = 0
+
+
+        
+
+
+
 
     if game_active:
         tank.update()
@@ -221,15 +264,8 @@ while True:
 
         # Check for game over condition
         if tank.health_bar.current_health <= 0:
-            screen.fill((0, 0, 0))
-            font = pygame.font.SysFont(None, 55)
-            game_over_text = font.render('GAME OVER', True, (255, 0, 0))
-            text_rect = game_over_text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
-            screen.blit(game_over_text, text_rect)
-            pygame.display.update()
-            pygame.time.wait(2000)  # Wait for 2 seconds
-            pygame.quit()
-            exit()
+            game_active = False
+            game_over = True
     
     elif high_scores:
         screen.fill("Grey")
@@ -237,10 +273,39 @@ while True:
 
         display = 200
         for i in range(0, 5):
-            user, score = Highscore.get_high_scores()[i]
-            display_high_score(title_font, user, score, display)
+            user, high_score = Highscore.get_high_scores()[i]
+            display_high_score(title_font, user, high_score, display)
             display += 100
-    
+    elif game_over:
+        screen.blit(sky_surface, (0, 0))
+        screen.blit(ground_surface, (0,600))
+
+        game_over_surface = title_font.render("Game Over", False, "White")
+        game_over_rect = game_over_surface.get_rect(center = (500, 100))
+        game_over = screen.blit(game_over_surface, game_over_rect)
+        textinput_custom.update(events)#captures initials input
+        screen.blit(textinput_custom.surface, textinput_custom_rect)#renders initials input
+
+        # pygame.draw.line(screen, "White", (345,205),(365,205))
+        # pygame.draw.line(screen, "White", (375,205),(395,205))
+        # pygame.draw.line(screen, "White", (405,205),(425,205))
+        # pygame.draw.line(screen, "White", (435,205),(455,205))
+        # pygame.draw.line(screen, "White", (465,205),(485,205))
+
+        ##Chatgpt help for above.  Want underscores for ui in initials window
+        line_length = 28
+        line_gap = 13
+        y_position = 205
+
+        # Draw lines closer together and a bit smaller.  draws underscores for user's initials.  draws 5 to tell user only 5 characters can be provided
+        pygame.draw.line(screen, "White", (380, y_position), (380 + line_length, y_position), width = 2)
+        pygame.draw.line(screen, "White", (380 + line_length + line_gap, y_position), (380 + 2*line_length + line_gap, y_position), width = 2)
+        pygame.draw.line(screen, "White", (380 + 2*(line_length + line_gap), y_position), (380 + 3*line_length + 2*line_gap, y_position), width = 2)
+        pygame.draw.line(screen, "White", (380 + 3*(line_length + line_gap), y_position), (380 + 4*line_length + 3*line_gap, y_position), width = 2)
+        pygame.draw.line(screen, "White", (380 + 4*(line_length + line_gap), y_position), (380 + 5*line_length + 4*line_gap, y_position), width = 2)
+        
+
+
     elif not game_active and not high_scores:
         screen.fill("Grey")
         screen.blit(title_surface, title_rect)
