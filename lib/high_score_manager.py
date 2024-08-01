@@ -1,15 +1,10 @@
 from . import CONN, CURSOR
 
-class Highscore():
-
-    # high_scores = high_scores_data['high_scores']
-
-
-    def __init__(self, user, score, id:int=None):
+class Highscore:
+    def __init__(self, user, score, id=None):
         self.id = id
         self.user = user
         self.score = score
-
 
     def __repr__(self):
         return f"Highscore(user={self.user}, score={self.score})"
@@ -17,65 +12,65 @@ class Highscore():
     @classmethod
     def create_table(cls):
         sql = """CREATE TABLE IF NOT EXISTS scores (
-        id INTEGER PRIMARY KEY, 
-        user_name TEXT, 
-        score INTEGER
+            id INTEGER PRIMARY KEY, 
+            user_name TEXT, 
+            score INTEGER
         )"""
-    
-        CURSOR.execute(sql)
-        CONN.commit()
-    
+        try:
+            CURSOR.execute(sql)
+            CONN.commit()
+        except Exception as e:
+            print(f"An error occurred while creating the table: {e}")
+
     def add_score(self):
-        sql ="""INSERT INTO scores (user_name, score) VALUES(?,?)"""
-        CURSOR.execute(sql, [self.user, self.score])
-        CONN.commit()
+        sql = """INSERT INTO scores (user_name, score) VALUES (?, ?)"""
+        try:
+            CURSOR.execute(sql, [self.user, self.score])
+            CONN.commit()
 
-        last_row_sql = """SELECT * FROM scores ORDER BY id DESC LIMIT 1"""
-        self.id = CURSOR.execute(last_row_sql).fetchone()[0]
-
+            last_row_sql = """SELECT * FROM scores ORDER BY id DESC LIMIT 1"""
+            self.id = CURSOR.execute(last_row_sql).fetchone()[0]
+        except Exception as e:
+            print(f"An error occurred while adding score: {e}")
+            CONN.rollback()
 
     @classmethod
     def get_high_scores(cls):
         sql = """SELECT user_name, score FROM scores ORDER BY score DESC LIMIT 5"""
-        sql_return = CURSOR.execute(sql)
-        top_5 = []
-        for i in sql_return:
-            top_5.append(i)
-        return top_5
-    
-    
-    ##For maintenance purposes
+        try:
+            sql_return = CURSOR.execute(sql)
+            return sql_return.fetchall()
+        except Exception as e:
+            print(f"An error occurred while retrieving high scores: {e}")
+            return []
+
     @classmethod
     def clean_score_records(cls):
         sql = """DELETE FROM scores WHERE score NOT IN (SELECT score FROM scores ORDER BY score DESC LIMIT 5)"""
-        CURSOR.execute(sql)
-        CONN.commit()
-    
-    # ##For maintenance purposes
-    # @classmethod
-    # def destroy_score_records(cls):
-    #     sql = """DELETE FROM scores"""
-    #     CURSOR.execute(sql)
-    #     CONN.commit()
+        try:
+            CURSOR.execute(sql)
+            CONN.commit()
+        except Exception as e:
+            print(f"An error occurred while cleaning score records: {e}")
+            CONN.rollback()
 
     @classmethod
     def initialize_scores(cls, user, score):
-        sql = """INSERT INTO scores (user_name, score) VALUES(?,?)"""
-        CURSOR.execute(sql, [user, score])
-        CONN.commit()
+        sql = """INSERT INTO scores (user_name, score) VALUES (?, ?)"""
+        try:
+            CURSOR.execute(sql, [user, score])
+            CONN.commit()
+        except Exception as e:
+            print(f"An error occurred while initializing scores: {e}")
+            CONN.rollback()
 
-
-    
-
-
-    ##Getter setter logic for class input validation
     @property
     def user(self):
         return self._user
-    
+
     @user.setter
     def user(self, value):
-        if type(value) == str:
+        if isinstance(value, str):
             self._user = value
         else:
             raise TypeError("user value needs to be a string")
@@ -83,11 +78,10 @@ class Highscore():
     @property
     def score(self):
         return self._score
-    
+
     @score.setter
     def score(self, value):
-        if type(value) == int:
+        if isinstance(value, int):
             self._score = value
         else:
             raise TypeError("score must be an integer")
-    ##End of getter setter logic

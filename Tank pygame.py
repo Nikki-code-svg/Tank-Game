@@ -19,13 +19,12 @@ title_rect = title_surface.get_rect(center=(500, 400))
 high_score_surface = title_font.render("High Scores", False, "Purple")
 high_score_rect = high_score_surface.get_rect(center=(500, 50))
 
-##enter name stuff
-
-manager = pygame_textinput.TextInputManager(validator = lambda input: len(input) <= 5)
-textinput_custom = pygame_textinput.TextInputVisualizer(manager=manager, font_object=title_font, font_color = "White")
+## Enter name stuff
+manager = pygame_textinput.TextInputManager(validator=lambda input: len(input) <= 5)
+textinput_custom = pygame_textinput.TextInputVisualizer(manager=manager, font_object=title_font, font_color="White")
 
 textinput_custom_surface = textinput_custom.surface
-textinput_custom_rect = textinput_custom_surface.get_rect(midbottom=(400,200))
+textinput_custom_rect = textinput_custom_surface.get_rect(midbottom=(400, 200))
 
 # Load surfaces
 ground_surface = pygame.image.load('Graphics/ground1.png').convert()
@@ -37,17 +36,24 @@ alien_images = [
     'Graphics/Ship3/Ship3.png'
 ]
 
+# Load explosion graphics
+explosion_frames = [
+    pygame.image.load('Graphics/explosion/frame1.png').convert_alpha(),
+    pygame.image.load('Graphics/explosion/frame2.png').convert_alpha(),
+    pygame.image.load('Graphics/explosion/frame3.png').convert_alpha(),
+    pygame.image.load('Graphics/explosion/frame4.png').convert_alpha(),  # Add more frames if you have them
+]
+
 #### Score Board ####
 def display_high_score(score_font, user, score, disp):
     score_surface = score_font.render(f"{user}.......{score}", False, "White")
     score_rect = score_surface.get_rect(center=(500, disp))
     screen.blit(score_surface, score_rect)
-######################
 
-####Live Score#######
+#### Live Score ####
 def display_score(score_font, score):
     score_surface = score_font.render(f"Score: {score}", False, "White")
-    score_rect = score_surface.get_rect(center = (500, 25))
+    score_rect = score_surface.get_rect(center=(500, 25))
     screen.blit(score_surface, score_rect)
 
 #### States/screens ####
@@ -55,9 +61,8 @@ def display_score(score_font, score):
 high_scores = False
 game_active = False
 game_over = False
-# game_over/enter initials
 
-# ##INIT SCORE
+# ## INIT SCORE
 score = 0
 
 class HealthBar:
@@ -179,9 +184,30 @@ class Tank(pygame.sprite.Sprite):
     def decrease_health(self, amount):
         self.health_bar.decrease_health(amount)
 
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.frames = explosion_frames
+        self.current_frame = 0
+        self.image = self.frames[self.current_frame]
+        self.rect = self.image.get_rect(center=(x, y))
+        self.animation_speed = 0.1  # Adjust this for speed of the explosion animation
+        self.last_update = pygame.time.get_ticks()
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.animation_speed * 1000:
+            self.current_frame += 1
+            if self.current_frame >= len(self.frames):
+                self.kill()
+            else:
+                self.image = self.frames[self.current_frame]
+                self.last_update = now
+
 # Initialize tank
 tank = Tank(100, 600)
 tank_group = pygame.sprite.GroupSingle(tank)
+explosion_group = pygame.sprite.Group()
 
 # Main game loop
 while True:
@@ -199,36 +225,26 @@ while True:
                     game_active = True
 
             if event.key == pygame.K_RETURN:
-                
                 if game_over:
-                    
                     if len(textinput_custom.value) > 0:
-
                         user_name = textinput_custom.value
                         user = Highscore(user_name, score)
                         user.add_score()
 
-
-                        #Reset
+                        # Reset
                         game_over = False
                         game_active = False
                         high_scores = True
                         score = 0
                         textinput_custom.value = ""
-                        ##Need to reset tank health and aliens
+                        # Need to reset tank health and aliens
                         tank.health_bar.current_health = 100
-            if event.key == pygame.K_TAB:
-                game_active = False
-                game_over = False
-                high_scores = False
-                tank.health_bar.current_health = 100
-                score = 0
-
-
-        
-
-
-
+                if event.key == pygame.K_TAB:
+                    game_active = False
+                    game_over = False
+                    high_scores = False
+                    tank.health_bar.current_health = 100
+                    score = 0
 
     if game_active:
         tank.update()
@@ -244,6 +260,10 @@ while True:
         tank_group.draw(screen)
         tank.lasers_group.draw(screen)
 
+        # Update and draw explosions
+        explosion_group.update()
+        explosion_group.draw(screen)
+
         # Check for collisions between aliens and tank
         for alien in alien_group:
             if pygame.sprite.spritecollide(alien, tank_group, False):
@@ -252,21 +272,19 @@ while True:
 
         # Check for collisions between lasers and aliens
         for laser in tank.lasers_group:
-            if pygame.sprite.spritecollide(laser, alien_group, True):  # True to remove aliens
+            collided_aliens = pygame.sprite.spritecollide(laser, alien_group, True)
+            for alien in collided_aliens:
+                explosion = Explosion(alien.rect.centerx, alien.rect.centery)
+                explosion_group.add(explosion)
                 explosion_sound.play()
-                laser.kill()  # Remove laser on collision
-                score +=1
-                # print(score)
-
-
-
-
+                laser.kill()
+                score += 1
 
         # Check for game over condition
         if tank.health_bar.current_health <= 0:
             game_active = False
             game_over = True
-    
+
     elif high_scores:
         screen.fill("Grey")
         screen.blit(high_score_surface, high_score_rect)
@@ -278,41 +296,32 @@ while True:
             display += 100
     elif game_over:
         screen.blit(sky_surface, (0, 0))
-        screen.blit(ground_surface, (0,600))
+        screen.blit(ground_surface, (0, 600))
 
         game_over_surface = title_font.render("Game Over", False, "White")
-        game_over_rect = game_over_surface.get_rect(center = (500, 100))
-        game_over = screen.blit(game_over_surface, game_over_rect)
-        textinput_custom.update(events)#captures initials input
-        screen.blit(textinput_custom.surface, textinput_custom_rect)#renders initials input
+        game_over_rect = game_over_surface.get_rect(center=(500, 100))
+        screen.blit(game_over_surface, game_over_rect)
+        textinput_custom.update(events)  # Captures initials input
+        screen.blit(textinput_custom.surface, textinput_custom_rect)  # Renders initials input
 
-        # pygame.draw.line(screen, "White", (345,205),(365,205))
-        # pygame.draw.line(screen, "White", (375,205),(395,205))
-        # pygame.draw.line(screen, "White", (405,205),(425,205))
-        # pygame.draw.line(screen, "White", (435,205),(455,205))
-        # pygame.draw.line(screen, "White", (465,205),(485,205))
-
-        ##Chatgpt help for above.  Want underscores for ui in initials window
+        # Draw underscores for user initials input
         line_length = 28
         line_gap = 13
         y_position = 205
 
-        # Draw lines closer together and a bit smaller.  draws underscores for user's initials.  draws 5 to tell user only 5 characters can be provided
-        pygame.draw.line(screen, "White", (380, y_position), (380 + line_length, y_position), width = 2)
-        pygame.draw.line(screen, "White", (380 + line_length + line_gap, y_position), (380 + 2*line_length + line_gap, y_position), width = 2)
-        pygame.draw.line(screen, "White", (380 + 2*(line_length + line_gap), y_position), (380 + 3*line_length + 2*line_gap, y_position), width = 2)
-        pygame.draw.line(screen, "White", (380 + 3*(line_length + line_gap), y_position), (380 + 4*line_length + 3*line_gap, y_position), width = 2)
-        pygame.draw.line(screen, "White", (380 + 4*(line_length + line_gap), y_position), (380 + 5*line_length + 4*line_gap, y_position), width = 2)
-        
-
+        pygame.draw.line(screen, "White", (380, y_position), (380 + line_length, y_position), width=2)
+        pygame.draw.line(screen, "White", (380 + line_length + line_gap, y_position), (380 + 2 * line_length + line_gap, y_position), width=2)
+        pygame.draw.line(screen, "White", (380 + 2 * (line_length + line_gap), y_position), (380 + 3 * line_length + 2 * line_gap, y_position), width=2)
+        pygame.draw.line(screen, "White", (380 + 3 * (line_length + line_gap), y_position), (380 + 4 * line_length + 3 * line_gap, y_position), width=2)
+        pygame.draw.line(screen, "White", (380 + 4 * (line_gap + line_length), y_position), (380 + 5 * line_length + 4 * line_gap, y_position), width=2)
 
     elif not game_active and not high_scores:
         screen.fill("Grey")
         screen.blit(title_surface, title_rect)
 
     # Respawn aliens if necessary
-    if len(alien_group) == 0:
-        spawn_aliens()
+    if len(alien_group) == 6:
+        spawn_aliens(5)
 
     pygame.display.update()
     clock.tick(60)
