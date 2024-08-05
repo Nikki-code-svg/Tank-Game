@@ -27,8 +27,12 @@ textinput_custom_surface = textinput_custom.surface
 textinput_custom_rect = textinput_custom_surface.get_rect(midbottom=(400, 200))
 
 # Load surfaces
-ground_surface = pygame.image.load('Graphics/New Piskel.png').convert()
-sky_surface = pygame.image.load('Graphics/10.png').convert()
+ground_surface = pygame.image.load('Graphics/road.png').convert()
+sky_surface = pygame.image.load('Graphics/sky.png').convert()
+
+# Resize the sky_surface image
+sky_surface = pygame.transform.scale(sky_surface, (1000, 600))
+ground_surface = pygame.transform.scale(ground_surface, (1000, 250))
 
 alien_images = [
     'Graphics/KlaedDreadnougtBase.png',
