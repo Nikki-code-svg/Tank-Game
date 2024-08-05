@@ -27,21 +27,23 @@ textinput_custom_surface = textinput_custom.surface
 textinput_custom_rect = textinput_custom_surface.get_rect(midbottom=(400, 200))
 
 # Load surfaces
-ground_surface = pygame.image.load('Graphics/ground1.png').convert()
-sky_surface = pygame.image.load('Graphics/Sky (3) copy.png').convert()
+ground_surface = pygame.image.load('Graphics/New Piskel.png').convert()
+sky_surface = pygame.image.load('Graphics/10.png').convert()
 
 alien_images = [
-    'Graphics/Ship6/Ship6.png',
-    'Graphics/Ship5/Ship5.png',
-    'Graphics/Ship3/Ship3.png'
+    'Graphics/KlaedDreadnougtBase.png',
+    'Graphics/KlaedBattlecruiserBase.png',
 ]
 
 # Load explosion graphics
 explosion_frames = [
-    pygame.image.load('Graphics/explosion/frame1.png').convert_alpha(),
-    pygame.image.load('Graphics/explosion/frame2.png').convert_alpha(),
-    pygame.image.load('Graphics/explosion/frame3.png').convert_alpha(),
-    pygame.image.load('Graphics/explosion/frame4.png').convert_alpha(),  # Add more frames if you have them
+    pygame.image.load('Graphics/explosions Vector/Explosion1jpeg-removebg-preview.png').convert_alpha(),
+    pygame.image.load('Graphics/explosions Vector/Explosion2-removebg-preview.png').convert_alpha(),
+    pygame.image.load('Graphics/explosions Vector/Explosion3-removebg-preview.png').convert_alpha(),
+    pygame.image.load('Graphics/explosions Vector/Explosion4-removebg-preview.png').convert_alpha(),
+    pygame.image.load('Graphics/explosions Vector/Explosion5-removebg-preview.png').convert_alpha(),
+    pygame.image.load('Graphics/explosions Vector/Explosion7-removebg-preview.png').convert_alpha(),
+    pygame.image.load('Graphics/explosions Vector/Explosion8-removebg-preview.png').convert_alpha()  # Add more frames if you have them
 ]
 
 #### Score Board ####
@@ -88,7 +90,7 @@ class Aliens(pygame.sprite.Sprite):
         original_alien_img = pygame.image.load(image_path).convert_alpha()
         self.image = pygame.transform.rotate(original_alien_img, angle)
         self.rect = self.image.get_rect(topleft=(x, y))
-        self.velocity = random.randint(1, 3)
+        self.velocity = random.randint(1, 1)
 
     def update(self):
         self.rect.y += self.velocity
@@ -105,7 +107,7 @@ def spawn_aliens(count=10):
     for i in range(count):
         x = random.randint(0, screen.get_width() - 100)
         y = random.randint(-150, -50)
-        angle = 90
+        angle = 180
         alien = Aliens(x, y, angle)
         alien_group.add(alien)
 
@@ -249,7 +251,7 @@ while True:
     if game_active:
         tank.update()
         screen.blit(sky_surface, (0, 0))
-        screen.blit(ground_surface, (0, 600))
+        screen.blit(ground_surface, (0, 550))
         display_score(title_font, score)
 
         # Update and draw aliens
